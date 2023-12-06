@@ -57,7 +57,7 @@ public class AdminService(IServiceProvider serviceProvider)
         {
             if (view.Select(v => v.Ids).Contains(orderLine.Ids))
             {
-                view.SingleOrDefault(v => v.Ids == orderLine.Ids).Amount++;
+                view.SingleOrDefault(v => v.Ids == orderLine.Ids).Amount += orderLine.Amount;
             }
             else
             {
