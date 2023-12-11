@@ -29,7 +29,8 @@ public static class ITelegramBotClientExtensions
             await botClient.EditMessageTextAsync(
                 chatId: model.TelegramMessage.Chat.Id,
                 model.TelegramMessage.MessageId,
-                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"Твой заказ:{model.Text}\nЧто добавим в заказ?",
+                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"<i>Твой заказ:{model.Text}</i>\nЧто добавим в заказ?",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
                 cancellationToken: model.CancellationToken,
                 replyMarkup: inlineKeyboard);
         }
@@ -37,7 +38,8 @@ public static class ITelegramBotClientExtensions
         {
             await botClient.SendTextMessageAsync(
                 chatId: model.TelegramMessage.Chat.Id,
-                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"Твой заказ:{model.Text}\nЧто добавим в заказ?",
+                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"<i>Твой заказ:{model.Text}</i>\nЧто добавим в заказ?",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
                 cancellationToken: model.CancellationToken,
                 replyMarkup: inlineKeyboard);
         }

@@ -132,7 +132,7 @@ public class TelegramBackgroundWorker : BackgroundService
                 }
 
                 var foodCallback = foodCallbacks.SingleOrDefault(fc => callbackQueryData.StartsWith(fc.CallbackFunctionName));
-                if (foodCallback is not null)
+                if (foodCallback is not null) // клик на блюдо
                 {
                     int childId = 0;
 
@@ -149,7 +149,7 @@ public class TelegramBackgroundWorker : BackgroundService
 
                     var parent = dishesCache.SingleOrDefault(d => d.Id == dishId);
 
-                    if (childId != 0)
+                    if (childId != 0) // если выбрали гарнир к блюду
                     {
                         foodCallback.CallbackFunction(dbUser.Id, childId);
                         var child = dishesCache.SingleOrDefault(d => d.Id == childId);
@@ -157,21 +157,19 @@ public class TelegramBackgroundWorker : BackgroundService
                         callbackQueryData = dishesTypesCache.SingleOrDefault(dt => dt.Id == parentDishTypeId).GetClickIdentifier();
                         _logger.LogInformation($"Пользователь [{senderName}] добавил [{parent.Name}]+[{child.Name}] в корзину");
                     }
-                    else if (!foodCallback.IsGarnishIncluded)
+                    else if (foodCallback.IsFlavoringIncluded)
+                    { // если кликнули на блюдо, которое подается с заправкой на выбор
+                        callbackQueryData = $"{garnishMenuCallback}:{dishTypeId}:{dishId}:6";
+                    }
+                    else if (!foodCallback.IsGarnishIncluded) // если блюдо подаётся без гарнира
                     {
                         foodCallback.CallbackFunction(dbUser.Id, 0);
                         callbackQueryData = dishesTypesCache.SingleOrDefault(dt => dt.Id == dishTypeId).GetClickIdentifier();
                         _logger.LogInformation($"Пользователь [{senderName}] добавил [{parent.Name}] в корзину");
                     }
-                    else if (foodCallback.IsGarnishIncluded)
+                    else // если кликнули на блюдо, которое подаётся с гарниром
                     {
-                        callbackQueryData = $"{garnishMenuCallback}:{dishTypeId}:{dishId}";
-                    }
-                    else if (foodCallback.IsFlavoringIncluded) {
-
-                    }
-                    else {
-                        
+                        callbackQueryData = $"{garnishMenuCallback}:{dishTypeId}:{dishId}:4";
                     }
                 }
 
@@ -241,7 +239,8 @@ public class TelegramBackgroundWorker : BackgroundService
                     await botClient.EditMessageTextAsync(
                         callbackQuery.Message.Chat.Id,
                         callbackQuery.Message.MessageId,
-                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? dishTypeName : $"Твой заказ:{userOrderInfo}\n{dishTypeName}")}:\n",
+                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? dishTypeName : $"<i>Твой заказ:{userOrderInfo}</i>\n{dishTypeName}")}:\n",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
                         replyMarkup: inlineKeyboard);
 
                     _logger.LogInformation($"Пользователь [{senderName}] открыл [{dishTypeName}] на [{pageNumber}] странице");
@@ -251,34 +250,51 @@ public class TelegramBackgroundWorker : BackgroundService
                 if (callbackQueryData.StartsWith(garnishMenuCallback))
                 {
                     var dotsSegments = callbackQueryData.Split(":");
-                    _ = int.TryParse(dotsSegments[1], out int dishTypeId);
-                    _ = int.TryParse(dotsSegments[2], out int dishId);
+                    _ = int.TryParse(dotsSegments[1], out int parentDishTypeId);
+                    _ = int.TryParse(dotsSegments[2], out int parentDishId);
+                    _ = int.TryParse(dotsSegments[3], out int childDishTypeId);
 
-                    var dishes = dishesCache.Where(d => d.DishTypeId == dishTypeId).OrderBy(d => d.Sort).ToList();
-                    var dish = dishes.SingleOrDefault(d => d.Id == dishId);
-                    var garnishes = dishesCache.Where(d => d.DishTypeId == 4).OrderBy(d => d.Sort).ToList();
+                    var parentDish = dishesCache.SingleOrDefault(d => d.Id == parentDishId);
+                    var children = dishesCache.Where(d => d.DishTypeId == childDishTypeId).OrderBy(d => d.Sort).ToList();
 
                     List<InlineKeyboardButton[]> rows = [];
 
-                    foreach (var garnish in garnishes)
+                    foreach (var child in children)
                     {
-                        rows.Add([InlineKeyboardButton.WithCallbackData(garnish.Name, $"{dish.GetClickIdentifier(garnish.Id)}/{pageNumber}")]);
+                        rows.Add([InlineKeyboardButton.WithCallbackData(child.Name, $"{parentDish.GetClickIdentifier(child.Id)}/{pageNumber}")]);
                     }
 
-                    rows.Add([InlineKeyboardButton.WithCallbackData("Назад", $"{dishesTypesCache.SingleOrDefault(dt => dt.Id == dishTypeId).GetClickIdentifier()}/{pageNumber}")]);
+                    rows.Add([InlineKeyboardButton.WithCallbackData("Назад", $"{dishesTypesCache.SingleOrDefault(dt => dt.Id == parentDishTypeId).GetClickIdentifier()}/{pageNumber}")]);
 
                     InlineKeyboardMarkup inlineKeyboard = new(rows);
 
                     string userOrderInfo = (await scope.ServiceProvider.GetRequiredService<UserService>().GetUserOrderInfo(sender.Id)).OrderInfo;
-                    string parentDishName = $"Выбранное блюдо ({dish.Name.ToLowerInvariant()}) подаётся вместе с гарниром, он входит в стоимость {dish.Price} рублей. С каким гарниром нужно подать?";
+                    string parentDishName = string.Empty;
+
+                    if (childDishTypeId == 4)
+                    {
+                        parentDishName = $"Выбранное блюдо ({parentDish.Name.ToLowerInvariant()}) подаётся вместе с гарниром, он входит в стоимость {parentDish.Price} рублей. С каким гарниром нужно подать?";
+                    }
+                    if (childDishTypeId == 6)
+                    {
+                        parentDishName = $"К выбранному салату ({parentDish.Name.ToLowerInvariant()}) нужно выбрать заправку. Чем заправить?";
+                    }
 
                     await botClient.EditMessageTextAsync(
                         callbackQuery.Message.Chat.Id,
                         callbackQuery.Message.MessageId,
-                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? parentDishName : $"Твой заказ:{userOrderInfo}\n{parentDishName}")}",
+                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? parentDishName : $"<i>Твой заказ:{userOrderInfo}</i>\n{parentDishName}")}",
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
                         replyMarkup: inlineKeyboard);
 
-                    _logger.LogInformation($"Пользователь [{senderName}] открыл меню выбора гарнира для блюда [{dish.Name}]");
+                    if (childDishTypeId == 4)
+                    {
+                        _logger.LogInformation($"Пользователь [{senderName}] открыл меню выбора гарнира для блюда [{parentDish.Name}]");
+                    }
+                    if (childDishTypeId == 6)
+                    {
+                        _logger.LogInformation($"Пользователь [{senderName}] открыл меню выбора заправки для салата [{parentDish.Name}]");
+                    }
                     return;
                 }
 
@@ -342,7 +358,7 @@ public class TelegramBackgroundWorker : BackgroundService
                     var orderToConfirm = db.Orders.SingleOrDefault(o => o.Id == orderToConfirmId);
 
                     var orderCreator = db.Clients.SingleOrDefault(c => c.Id == orderToConfirm.ClientId);
-                    
+
                     var orderToConfirmInfo = await scope.ServiceProvider.GetRequiredService<UserService>().GetUserOrderInfo(orderCreator.ExternalId, true);
                     if (orderToConfirmInfo == null)
                     {
