@@ -12,7 +12,7 @@ public static class ITelegramBotClientExtensions
     {
         List<InlineKeyboardButton[]> rows = [];
 
-        foreach (var dishType in dishesTypesCache)
+        foreach (var dishType in dishesTypesCache.Where(dt => dt.IsShowInMainMenu == 1).ToList())
         {
             rows.Add([InlineKeyboardButton.WithCallbackData(dishType.GetDishTypeButtonText(), $"{dishType.GetClickIdentifier()}/1")]);
         }
@@ -29,7 +29,7 @@ public static class ITelegramBotClientExtensions
             await botClient.EditMessageTextAsync(
                 chatId: model.TelegramMessage.Chat.Id,
                 model.TelegramMessage.MessageId,
-                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"Твой заказ:\n{model.Text}\nЧто добавим в заказ?",
+                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"Твой заказ:{model.Text}\nЧто добавим в заказ?",
                 cancellationToken: model.CancellationToken,
                 replyMarkup: inlineKeyboard);
         }
@@ -37,7 +37,7 @@ public static class ITelegramBotClientExtensions
         {
             await botClient.SendTextMessageAsync(
                 chatId: model.TelegramMessage.Chat.Id,
-                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"Твой заказ:\n{model.Text}\nЧто добавим в заказ?",
+                text: string.IsNullOrWhiteSpace(model.Text) ? "Что будем заказывать?" : $"Твой заказ:{model.Text}\nЧто добавим в заказ?",
                 cancellationToken: model.CancellationToken,
                 replyMarkup: inlineKeyboard);
         }
@@ -47,7 +47,7 @@ public static class ITelegramBotClientExtensions
     {
         List<InlineKeyboardButton[]> rows = [];
 
-        foreach (var dishType in dishesTypesCache)
+        foreach (var dishType in dishesTypesCache.Where(dt => dt.IsShowInMainMenu == 1).ToList())
         {
             rows.Add([InlineKeyboardButton.WithCallbackData(dishType.GetDishTypeButtonText(), $"{dishType.GetClickIdentifier()}/1")]);
         }
@@ -71,7 +71,7 @@ public static class ITelegramBotClientExtensions
         await botClient.EditMessageTextAsync(
                     chatId: model.TelegramMessage.Chat.Id,
                     model.TelegramMessage.MessageId,
-                    text: $"Твой заказ:\n{model.Text}",
+                    text: $"Твой заказ:{model.Text}",
                     replyMarkup: inlineKeyboard,
                     cancellationToken: model.CancellationToken);
     }
@@ -92,11 +92,11 @@ public static class ITelegramBotClientExtensions
         {
             InlineKeyboardMarkup inlineKeyboard = new([
                 [InlineKeyboardButton.WithCallbackData("Очистить корзину", clearCartCallback)],
-            [InlineKeyboardButton.WithCallbackData("Отправить заказ", makeOrderCallback)]]);
+                [InlineKeyboardButton.WithCallbackData("Отправить заказ", makeOrderCallback)]]);
 
             await botClient.SendTextMessageAsync(
                         chatId: model.TelegramMessage.Chat.Id,
-                        text: $"Твой заказ:\n{model.Text}",
+                        text: $"Твой заказ:{model.Text}",
                         replyMarkup: inlineKeyboard,
                         cancellationToken: model.CancellationToken);
         }

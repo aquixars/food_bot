@@ -15,6 +15,8 @@ public partial class Dish
 
     public int IsGarnishIncluded { get; set; }
 
+    public int IsFlavoringIncluded { get; set; }
+
     public int? Sort { get; set; }
 
     public virtual DishType DishType { get; set; }

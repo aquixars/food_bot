@@ -9,5 +9,7 @@ public partial class DishType
 
     public string Name { get; set; }
 
+    public int IsShowInMainMenu { get; set; }
+
     public virtual ICollection<Dish> Dishes { get; set; } = new List<Dish>();
 }

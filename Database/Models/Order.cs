@@ -1,8 +1,11 @@
-﻿namespace fobot.Database.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace fobot.Database.Models;
 
 public partial class Order
 {
-    public long Id { get; set; }
+    public int Id { get; set; }
 
     public int ClientId { get; set; }
 

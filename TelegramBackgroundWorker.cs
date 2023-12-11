@@ -163,9 +163,15 @@ public class TelegramBackgroundWorker : BackgroundService
                         callbackQueryData = dishesTypesCache.SingleOrDefault(dt => dt.Id == dishTypeId).GetClickIdentifier();
                         _logger.LogInformation($"Пользователь [{senderName}] добавил [{parent.Name}] в корзину");
                     }
-                    else
+                    else if (foodCallback.IsGarnishIncluded)
                     {
                         callbackQueryData = $"{garnishMenuCallback}:{dishTypeId}:{dishId}";
+                    }
+                    else if (foodCallback.IsFlavoringIncluded) {
+
+                    }
+                    else {
+                        
                     }
                 }
 
@@ -235,7 +241,7 @@ public class TelegramBackgroundWorker : BackgroundService
                     await botClient.EditMessageTextAsync(
                         callbackQuery.Message.Chat.Id,
                         callbackQuery.Message.MessageId,
-                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? dishTypeName : $"Твой заказ:\n{userOrderInfo}\n{dishTypeName}")}:\n",
+                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? dishTypeName : $"Твой заказ:{userOrderInfo}\n{dishTypeName}")}:\n",
                         replyMarkup: inlineKeyboard);
 
                     _logger.LogInformation($"Пользователь [{senderName}] открыл [{dishTypeName}] на [{pageNumber}] странице");
@@ -256,7 +262,7 @@ public class TelegramBackgroundWorker : BackgroundService
 
                     foreach (var garnish in garnishes)
                     {
-                        rows.Add([InlineKeyboardButton.WithCallbackData(garnish.GetDishButtonText(), $"{dish.GetClickIdentifier(garnish.Id)}/{pageNumber}")]);
+                        rows.Add([InlineKeyboardButton.WithCallbackData(garnish.Name, $"{dish.GetClickIdentifier(garnish.Id)}/{pageNumber}")]);
                     }
 
                     rows.Add([InlineKeyboardButton.WithCallbackData("Назад", $"{dishesTypesCache.SingleOrDefault(dt => dt.Id == dishTypeId).GetClickIdentifier()}/{pageNumber}")]);
@@ -264,12 +270,12 @@ public class TelegramBackgroundWorker : BackgroundService
                     InlineKeyboardMarkup inlineKeyboard = new(rows);
 
                     string userOrderInfo = (await scope.ServiceProvider.GetRequiredService<UserService>().GetUserOrderInfo(sender.Id)).OrderInfo;
-                    string parentDishName = $"{dishesCache.SingleOrDefault(d => d.Id == dishId).GetDishButtonText()} + ... (выбери гарнир из списка)";
+                    string parentDishName = $"Выбранное блюдо ({dish.Name.ToLowerInvariant()}) подаётся вместе с гарниром, он входит в стоимость {dish.Price} рублей. С каким гарниром нужно подать?";
 
                     await botClient.EditMessageTextAsync(
                         callbackQuery.Message.Chat.Id,
                         callbackQuery.Message.MessageId,
-                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? parentDishName : $"{userOrderInfo}\n{parentDishName}")}:\n",
+                        $"{(string.IsNullOrWhiteSpace(userOrderInfo) ? parentDishName : $"Твой заказ:{userOrderInfo}\n{parentDishName}")}",
                         replyMarkup: inlineKeyboard);
 
                     _logger.LogInformation($"Пользователь [{senderName}] открыл меню выбора гарнира для блюда [{dish.Name}]");

@@ -18,6 +18,7 @@ public class OrderService(IServiceProvider serviceProvider)
             FoodClickCallbackModel foodCallback = new()
             {
                 IsGarnishIncluded = dish.IsGarnishIncluded == 1,
+                IsFlavoringIncluded = dish.IsFlavoringIncluded == 1,
                 CallbackFunctionName = dish.GetClickIdentifier(),
                 CallbackFunction = async (userId, childId) => await AddOrderLine(userId, dish.Id, childId)
             };

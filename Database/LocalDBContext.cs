@@ -73,6 +73,7 @@ public partial class LocalDBContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.DishTypeId).HasColumnName("dishTypeId");
+            entity.Property(e => e.IsFlavoringIncluded).HasColumnName("isFlavoringIncluded");
             entity.Property(e => e.IsGarnishIncluded).HasColumnName("isGarnishIncluded");
             entity.Property(e => e.Name)
                 .IsRequired()
@@ -88,6 +89,9 @@ public partial class LocalDBContext : DbContext
             entity.Property(e => e.Id)
                 .ValueGeneratedNever()
                 .HasColumnName("id");
+            entity.Property(e => e.IsShowInMainMenu)
+                .HasDefaultValue(1)
+                .HasColumnName("isShowInMainMenu");
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasColumnName("name");

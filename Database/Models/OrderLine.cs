@@ -1,10 +1,13 @@
-﻿namespace fobot.Database.Models;
+﻿using System;
+using System.Collections.Generic;
+
+namespace fobot.Database.Models;
 
 public partial class OrderLine
 {
     public int Id { get; set; }
 
-    public long OrderId { get; set; }
+    public int OrderId { get; set; }
 
     public int DishId { get; set; }
 
