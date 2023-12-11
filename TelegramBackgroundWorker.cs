@@ -229,7 +229,7 @@ public class TelegramBackgroundWorker : BackgroundService
                         }
                     }
 
-                    rows.Add([InlineKeyboardButton.WithCallbackData("К списку блюд", backToMenuCallback)]);
+                    rows.Add([InlineKeyboardButton.WithCallbackData("↩️ К списку блюд", backToMenuCallback)]);
 
                     InlineKeyboardMarkup inlineKeyboard = new(rows);
 
@@ -264,7 +264,7 @@ public class TelegramBackgroundWorker : BackgroundService
                         rows.Add([InlineKeyboardButton.WithCallbackData(child.Name, $"{parentDish.GetClickIdentifier(child.Id)}/{pageNumber}")]);
                     }
 
-                    rows.Add([InlineKeyboardButton.WithCallbackData("Назад", $"{dishesTypesCache.SingleOrDefault(dt => dt.Id == parentDishTypeId).GetClickIdentifier()}/{pageNumber}")]);
+                    rows.Add([InlineKeyboardButton.WithCallbackData("↩️ Назад", $"{dishesTypesCache.SingleOrDefault(dt => dt.Id == parentDishTypeId).GetClickIdentifier()}/{pageNumber}")]);
 
                     InlineKeyboardMarkup inlineKeyboard = new(rows);
 

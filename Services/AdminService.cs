@@ -65,7 +65,7 @@ public class AdminService(IServiceProvider serviceProvider)
             }
         }
 
-        StringBuilder formattedResult = new($"Заказы за {GlobalVariables.CurrentDateTimeString}");
+        StringBuilder formattedResult = new($"Заказы за {CurrentDateString}");
         formattedResult.AppendLine();
         int totalPrice = 0;
 
@@ -133,11 +133,11 @@ public class AdminService(IServiceProvider serviceProvider)
 
         return $@"<b>Заказ успешно оформлен!</b>
 {orderText}
-Сумму можно перевести на <b>{admin.Bank}</b> (<b>{admin.Initials}</b>), номер телефона:
+⚠️ Сумму необходимо перевести на <b>{admin.Bank}</b> (<b>{admin.Initials}</b>), номер телефона:
 
-<code>{admin.PhoneNumber}</code> (нажми, чтобы скопировать)
+<code>{admin.PhoneNumber}</code> <i>(нажми, чтобы скопировать)</i>
 
-{admin.PhoneNumber} (активная кнопка для пользователей Android)";
+{admin.PhoneNumber} <i>(активная кнопка для пользователей Android)</i>";
     }
 
     public async Task<List<UnconfirmedOrderModel>> GetUnconfirmedOrders()

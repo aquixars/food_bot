@@ -19,7 +19,7 @@ public static class ITelegramBotClientExtensions
 
         if (!string.IsNullOrWhiteSpace(model.Text))
         {
-            rows.Add([InlineKeyboardButton.WithCallbackData("Перейти к оформлению", goToOrderCallback)]);
+            rows.Add([InlineKeyboardButton.WithCallbackData("⤴️ Перейти к оформлению", goToOrderCallback)]);
         }
 
         InlineKeyboardMarkup inlineKeyboard = new(rows);
@@ -59,7 +59,8 @@ public static class ITelegramBotClientExtensions
         await botClient.EditMessageTextAsync(
             model.TelegramMessage.Chat.Id,
             model.TelegramMessage.MessageId,
-            text: $"Корзина очищена.\nЧто будем заказывать?",
+            text: $"<i>Корзина очищена.</i>\n\nЧто будем заказывать?",
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html,
             replyMarkup: inlineKeyboard,
             cancellationToken: model.CancellationToken);
     }
@@ -67,8 +68,8 @@ public static class ITelegramBotClientExtensions
     public static async Task HandleGoToOrderPageClick(this ITelegramBotClient botClient, CommunicationModel model)
     {
         InlineKeyboardMarkup inlineKeyboard = new([
-                [InlineKeyboardButton.WithCallbackData("Очистить корзину", clearCartCallback)],
-            [InlineKeyboardButton.WithCallbackData("Отправить заказ", makeOrderCallback)]]);
+                [InlineKeyboardButton.WithCallbackData(clearCartButtonText, clearCartCallback)],
+                [InlineKeyboardButton.WithCallbackData(sendOrderButtonText, makeOrderCallback)]]);
 
         await botClient.EditMessageTextAsync(
                     chatId: model.TelegramMessage.Chat.Id,
@@ -82,7 +83,7 @@ public static class ITelegramBotClientExtensions
     {
         if (string.IsNullOrWhiteSpace(model.Text))
         {
-            InlineKeyboardMarkup inlineKeyboard = new([[InlineKeyboardButton.WithCallbackData("Перейти к меню", backToMenuCallback)]]);
+            InlineKeyboardMarkup inlineKeyboard = new([[InlineKeyboardButton.WithCallbackData("⤴️ Перейти к меню", backToMenuCallback)]]);
 
             await botClient.SendTextMessageAsync(
                         chatId: model.TelegramMessage.Chat.Id,
@@ -93,8 +94,8 @@ public static class ITelegramBotClientExtensions
         else
         {
             InlineKeyboardMarkup inlineKeyboard = new([
-                [InlineKeyboardButton.WithCallbackData("Очистить корзину", clearCartCallback)],
-                [InlineKeyboardButton.WithCallbackData("Отправить заказ", makeOrderCallback)]]);
+                [InlineKeyboardButton.WithCallbackData(clearCartButtonText, clearCartCallback)],
+                [InlineKeyboardButton.WithCallbackData(sendOrderButtonText, makeOrderCallback)]]);
 
             await botClient.SendTextMessageAsync(
                         chatId: model.TelegramMessage.Chat.Id,
@@ -129,7 +130,7 @@ public static class ITelegramBotClientExtensions
             model.TelegramMessage.MessageId,
             text: model.Text,
             cancellationToken: model.CancellationToken,
-            replyMarkup: new([[InlineKeyboardButton.WithCallbackData("Вернуться к меню", backToMenuCallback)]]),
+            replyMarkup: new([[InlineKeyboardButton.WithCallbackData("⤴️ Перейти к меню", backToMenuCallback)]]),
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
     }
 

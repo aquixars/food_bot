@@ -9,6 +9,8 @@ public static class GlobalVariables
     public const string myOrderButtonText = "🛒Мой заказ";
     public const string todayOrdersButtonText = "✍️Сегодняшний список";
     public const string unconfirmedOrdersButtonText = "👍Ожидающие заказы";
+    public const string clearCartButtonText = "🗑️ Очистить корзину";
+    public const string sendOrderButtonText = "📤 Отправить заказ";
 
     public const string previousPageButtonText = "⬅️ Назад";
     public const string nextPageButtonText = "Далее ➡️";
@@ -20,6 +22,7 @@ public static class GlobalVariables
     public const string goToOrderCallback = "open.my.order";
     public static string dummyCallback = Guid.NewGuid().ToString();
     public static string CurrentDateTimeString => $"{DateTime.Now:dd.MM.yyyy HH:mm:ss}";
+    public static string CurrentDateString => $"{DateTime.Now:dd.MM.yyyy}";
 
     public static string LogsPath = $"{AppContext.BaseDirectory}{Path.DirectorySeparatorChar}logs";
 
