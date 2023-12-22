@@ -1,3 +1,4 @@
+using fobot.Database.Models;
 using fobot.POCOs;
 using food_bot.POCOs;
 using Telegram.Bot;
@@ -113,6 +114,7 @@ public static class ITelegramBotClientExtensions
         if (isShowAdminButtons)
         {
             rows.Add([todayOrdersButtonText, unconfirmedOrdersButtonText]);
+            rows.Add([sendNotificationsButtonText]);
         }
 
         ReplyKeyboardMarkup inlineKeyboard = new(rows) { ResizeKeyboard = true, IsPersistent = true };
@@ -162,5 +164,47 @@ public static class ITelegramBotClientExtensions
                 cancellationToken: model.CancellationToken,
                 replyMarkup: inlineKeyboard);
         }
+    }
+
+    public static async Task HandleSettingsClick(this ITelegramBotClient botClient, CommunicationModel model, List<ClientSettingViewModel> settings)
+    {
+        List<InlineKeyboardButton[]> rows = [];
+
+        foreach (var setting in settings)
+        {
+            string emojiValue = setting.Value.ToUpperInvariant() == "ДА" ? "✔️" : "🚫";
+            rows.Add([InlineKeyboardButton.WithCallbackData($"{setting.Name}: {emojiValue}", $"{dummyCallback}/changeValue/{setting.Id}")]);
+        }
+
+        InlineKeyboardMarkup inlineKeyboard = new(rows);
+
+        if (model.isEditOldMessage)
+        {
+            await botClient.EditMessageTextAsync(
+                chatId: model.TelegramMessage.Chat.Id,
+                model.TelegramMessage.MessageId,
+                text: settings.Any() ? model.Text : "Настройки не найдены!",
+                cancellationToken: model.CancellationToken,
+                replyMarkup: inlineKeyboard,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+        }
+        else
+        {
+            await botClient.SendTextMessageAsync(
+                chatId: model.TelegramMessage.Chat.Id,
+                text: settings.Any() ? model.Text : "Настройки не найдены!",
+                cancellationToken: model.CancellationToken,
+                replyMarkup: inlineKeyboard,
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+        }
+    }
+
+    public static async Task HandleHistoryClick(this ITelegramBotClient botClient, CommunicationModel model)
+    {
+        await botClient.SendTextMessageAsync(
+            chatId: model.TelegramMessage.Chat.Id,
+            text: "<i>Появится в будущих обновлениях! :)</i>",
+            cancellationToken: model.CancellationToken,
+            parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
     }
 }

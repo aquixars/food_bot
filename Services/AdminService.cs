@@ -2,6 +2,7 @@ using System.Text;
 using fobot.Database;
 using fobot.Database.Models;
 using fobot.POCOs;
+using food_bot.Enums;
 using food_bot.POCOs;
 using Microsoft.EntityFrameworkCore;
 using static fobot.GlobalVariables;
@@ -184,5 +185,37 @@ public class AdminService(IServiceProvider serviceProvider)
         db.Orders.Update(order);
 
         await db.SaveChangesAsync();
+    }
+
+    public async Task<List<Client>> GetUsersToNotify()
+    {
+        await using var scope = _serviceProvider.CreateAsyncScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<LocalDBContext>();
+
+        var getOrderTask = db.Orders.Where(o => o.IsSend == 1).ToListAsync();
+        getOrderTask.Wait();
+        var orders = getOrderTask.Result;
+
+        var todayOrderIds = orders
+        .Select(o => new
+        {
+            o.Id,
+            isToday = new DateTime(o.CreatedInTicks).Date == DateTime.Today
+        })
+        .Where(el => el.isToday)
+        .Select(o => o.Id)
+        .ToList();
+
+        var todayOrders = db.Orders.Where(o => todayOrderIds.Contains(o.Id)).ToList();
+        var todayOrderClients = todayOrders.Select(o => o.ClientId).ToList();
+
+        var userWithEnabledNotificationsIds = db.ClientSettings
+            .Where(cs => cs.SettingId == (int)SettingTypesEnum.Получать_напоминания_о_заказе && cs.Value == "Да")
+            .Select(cs => cs.ClientId)
+            .Except(todayOrderClients)
+            .ToList();
+
+        return db.Clients.Where(c => userWithEnabledNotificationsIds.Contains(c.Id)).ToList();
     }
 }

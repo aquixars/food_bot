@@ -21,5 +21,7 @@ public partial class Client
 
     public virtual ICollection<Admin> Admins { get; set; } = new List<Admin>();
 
+    public virtual ICollection<ClientSetting> ClientSettings { get; set; } = new List<ClientSetting>();
+
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 }

@@ -20,6 +20,8 @@ public partial class LocalDBContext : DbContext
 
     public virtual DbSet<Client> Clients { get; set; }
 
+    public virtual DbSet<ClientSetting> ClientSettings { get; set; }
+
     public virtual DbSet<Dish> Dishes { get; set; }
 
     public virtual DbSet<DishType> DishTypes { get; set; }
@@ -65,6 +67,26 @@ public partial class LocalDBContext : DbContext
             entity.Property(e => e.LastName).HasColumnName("lastName");
             entity.Property(e => e.SystemName).HasColumnName("systemName");
             entity.Property(e => e.UserName).HasColumnName("userName");
+        });
+
+        modelBuilder.Entity<ClientSetting>(entity =>
+        {
+            entity.HasIndex(e => e.Id, "IX_ClientSettings_id").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ClientId).HasColumnName("clientId");
+            entity.Property(e => e.SettingId).HasColumnName("settingId");
+            entity.Property(e => e.Value)
+                .IsRequired()
+                .HasColumnName("value");
+
+            entity.HasOne(d => d.Client).WithMany(p => p.ClientSettings)
+                .HasForeignKey(d => d.ClientId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            entity.HasOne(d => d.Setting).WithMany(p => p.ClientSettings)
+                .HasForeignKey(d => d.SettingId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
         });
 
         modelBuilder.Entity<Dish>(entity =>
@@ -134,6 +156,16 @@ public partial class LocalDBContext : DbContext
             entity.HasOne(d => d.Order).WithMany(p => p.OrderLines)
                 .HasForeignKey(d => d.OrderId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
+        });
+
+        modelBuilder.Entity<SettingType>(entity =>
+        {
+            entity.HasIndex(e => e.Id, "IX_SettingTypes_id").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasColumnName("name");
         });
 
         OnModelCreatingPartial(modelBuilder);

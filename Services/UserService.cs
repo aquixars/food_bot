@@ -173,4 +173,26 @@ public class UserService(IServiceProvider serviceProvider)
 
         await db.SaveChangesAsync();
     }
+
+    public async Task<List<ClientSettingViewModel>> GetUserSettings(long userId)
+    {
+        await using var scope = _serviceProvider.CreateAsyncScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<LocalDBContext>();
+
+        var settings = db.ClientSettings
+        .Where(cs => cs.ClientId == userId)
+        .Join(db.SettingTypes,
+              clientSettings => clientSettings.SettingId,
+              settingTypes => settingTypes.Id,
+              (clientSettings, settingTypes) => new { clientSettings, settingTypes })
+        .Select(tables => new ClientSettingViewModel()
+        {
+            Id = tables.clientSettings.Id,
+            Name = tables.settingTypes.Name,
+            Value = tables.clientSettings.Value
+        }).ToList();
+
+        return settings;
+    }
 }

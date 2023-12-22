@@ -4,6 +4,8 @@ using fobot.Extensions;
 using fobot.Logging;
 using fobot.POCOs;
 using fobot.Services;
+using food_bot.Enums;
+using food_bot.POCOs;
 using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -53,27 +55,25 @@ public class TelegramBackgroundWorker : BackgroundService
 
     private async Task LaunchBot()
     {
-        await using var scope = serviceProvider.CreateAsyncScope();
+        try
+        {
+            await using var scope = serviceProvider.CreateAsyncScope();
 
-        await scope.ServiceProvider.GetRequiredService<OrderService>().InitMenuCallbacks();
+            await scope.ServiceProvider.GetRequiredService<OrderService>().InitMenuCallbacks();
 
-        var cancellationToken = new CancellationTokenSource().Token;
+            var cancellationToken = new CancellationTokenSource().Token;
 
-        telegramBot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions { AllowedUpdates = { }, }, cancellationToken);
+            telegramBot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions { AllowedUpdates = { }, }, cancellationToken);
 
-        //await telegramBot.SetMyCommandsAsync(new List<BotCommand>() {
-        //    new() {
-        //        Command = currentFoodButtonText,
-        //        Description = "Открыть меню",
-        //    },
-        //    new() {
-        //        Command = myOrderButtonText,
-        //        Description = "Работа с заказом",
-        //    }
-        //},
-        //new BotCommandScopeDefault(),
-        //"ru",
-        //cancellationToken);
+            await telegramBot.SetMyCommandsAsync(new List<BotCommand>() {
+                new() { Command = settingsCommandText, Description = settingsButtonText },
+                new() { Command = historyCommandText, Description = historyButtonText }
+            }, new BotCommandScopeDefault(), "ru", cancellationToken);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Ошибка в основном потоке!");
+        }
     }
 
     private static async Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
@@ -376,6 +376,24 @@ public class TelegramBackgroundWorker : BackgroundService
                     return;
                 }
 
+                if (callbackQueryData.StartsWith($"{dummyCallback}/changeValue/"))
+                {
+                    var settingToChangeId = long.Parse(callbackQueryData.Split($"{dummyCallback}/changeValue/")[1]);
+                    var settingToChange = db.ClientSettings.SingleOrDefault(o => o.Id == settingToChangeId);
+                    var creator = db.Clients.SingleOrDefault(c => c.Id == settingToChange.ClientId);
+                    string oldValue = settingToChange.Value;
+                    string newValue = oldValue.ToUpperInvariant() == "ДА" ? "Нет" : "Да";
+                    settingToChange.Value = newValue;
+                    db.SaveChanges();
+                    var settingTypeToChange = db.SettingTypes.SingleOrDefault(o => o.Id == settingToChange.SettingId);
+                    _logger.LogInformation($"Пользователь [{senderName}] изменил значение настройки {settingTypeToChange.Name} с {oldValue} на {newValue}");
+                    model.Text = "Ниже перечислены настройки твоего профиля.\n\n<i>Чтобы изменить значение, нажми на строчку с именем настройки.\n✔️ — настройка включена,\n🚫 — настройка выключена</i>";
+                    model.isEditOldMessage = true;
+                    var settings = await scope.ServiceProvider.GetRequiredService<UserService>().GetUserSettings(dbUser.Id);
+                    await botClient.HandleSettingsClick(model, settings);
+                    return;
+                }
+
                 return;
             }
 
@@ -407,16 +425,33 @@ public class TelegramBackgroundWorker : BackgroundService
                     await botClient.HandleOrderPageClick(model);
                     _logger.LogInformation($"Пользователь [{senderName}] нажал на кнопку \"Мой заказ\"");
                     return;
+                case settingsCommandText:
+                    model.Text = "Ниже перечислены настройки твоего профиля.\n\n<i>Чтобы изменить значение, нажми на строчку с именем настройки.\n✔️ — настройка включена,\n🚫 — настройка выключена</i>";
+                    model.isEditOldMessage = false;
+                    var settings = await scope.ServiceProvider.GetRequiredService<UserService>().GetUserSettings(dbUser.Id);
+                    await botClient.HandleSettingsClick(model, settings);
+                    _logger.LogInformation($"Пользователь [{senderName}] открыл свои настройки");
+                    break;
+                case historyCommandText:
+                    await botClient.HandleHistoryClick(model);
+                    _logger.LogInformation($"Пользователь [{senderName}] открыл историю заказов");
+                    break;
                 case todayOrdersButtonText when sender.Id == currentAdmin.ExternalId:
                     var todayOrders = $"{await scope.ServiceProvider.GetRequiredService<AdminService>().GetAdminOrderInfo()}";
                     await botClient.SendTextMessageAsync(currentAdmin.ExternalId, todayOrders);
                     _logger.LogInformation($"Пользователь [{senderName}] запросил информацию о сегодняшних заказах. Возвращаем:\n{JsonConvert.SerializeObject(todayOrders)}");
                     return;
-                //case "au" when sender.Id == currentAdmin.ExternalId:
-                //    var activeUsers = $"{JsonConvert.SerializeObject(await scope.ServiceProvider.GetRequiredService<AdminService>().GetActiveUsers(), Formatting.Indented)}";
-                //    await botClient.SendTextMessageAsync(currentAdmin.ExternalId, activeUsers);
-                //    _logger.LogInformation($"Пользователь [{senderName}] запросил информацию об активных пользователях. Возвращаем:\n{activeUsers}");
-                //    return;
+                case sendNotificationsButtonText when sender.Id == currentAdmin.ExternalId:
+                    var users = await scope.ServiceProvider.GetRequiredService<AdminService>().GetUsersToNotify();
+                    foreach (var user in users)
+                    {
+                        _logger.LogInformation($"Пользователю [{user.SystemName}] отправлено напоминание о заказе!");
+                        await botClient.SendTextMessageAsync(user.ExternalId,
+                        "Доброе утро, самое время сделать заказ!\n\n<i>Чтобы отключить напоминания, перейди в раздел настроек через меню (или команду /settings)</i>",
+                        cancellationToken: model.CancellationToken,
+                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+                    }
+                    return;
                 case unconfirmedOrdersButtonText when sender.Id == currentAdmin.ExternalId:
                     var unconfirmedOrders = await scope.ServiceProvider.GetRequiredService<AdminService>().GetUnconfirmedOrders();
                     model.Text = $"Неподтвержденные заказы на {CurrentDateTimeString}";
@@ -424,6 +459,7 @@ public class TelegramBackgroundWorker : BackgroundService
                     await botClient.HandleGetUnconfirmedOrders(model, unconfirmedOrders);
                     _logger.LogInformation($"Пользователь [{senderName}] запросил информацию о неподтвержденных заказах. Возвращаем:\n{JsonConvert.SerializeObject(unconfirmedOrders)}");
                     return;
+
                 default:
                     await botClient.HandleText(model, sender.Id == currentAdmin.ExternalId);
                     _logger.LogInformation($"Пользователь [{senderName}] написал текст: {message.Text}");
@@ -436,11 +472,9 @@ public class TelegramBackgroundWorker : BackgroundService
         }
         finally
         {
-            //var chatId = update.Message?.Chat.Id ?? update.CallbackQuery.Message.Chat.Id;
-            //
-            //await botClient.SetChatMenuButtonAsync(chatId: chatId,
-            //menuButton: new MenuButtonCommands(),
-            //cancellationToken: cancellationToken);
+            var chatId = update.Message?.Chat.Id ?? update.CallbackQuery.Message.Chat.Id;
+
+            await botClient.SetChatMenuButtonAsync(chatId: chatId, cancellationToken: cancellationToken);
         }
     }
 }

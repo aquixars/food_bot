@@ -9,8 +9,13 @@ public static class GlobalVariables
     public const string myOrderButtonText = "🛒Мой заказ";
     public const string todayOrdersButtonText = "✍️Сегодняшний список";
     public const string unconfirmedOrdersButtonText = "👍Ожидающие заказы";
+    public const string sendNotificationsButtonText = "Отправить напоминания";
     public const string clearCartButtonText = "🗑️ Очистить корзину";
     public const string sendOrderButtonText = "📤 Отправить заказ";
+    public const string settingsCommandText = "/settings";
+    public const string historyCommandText = "/history";
+    public const string settingsButtonText = "⚙️ Настройки";
+    public const string historyButtonText = "🛍️ История заказов";
 
     public const string previousPageButtonText = "⬅️ Назад";
     public const string nextPageButtonText = "Далее ➡️";
