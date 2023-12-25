@@ -477,7 +477,7 @@ public class TelegramBackgroundWorker : BackgroundService
         {
             var chatId = update.Message?.Chat.Id ?? update.CallbackQuery.Message.Chat.Id;
 
-            await botClient.SetChatMenuButtonAsync(chatId: chatId, cancellationToken: cancellationToken);
+            //await botClient.SetChatMenuButtonAsync(chatId: chatId, cancellationToken: cancellationToken);
         }
     }
 }
