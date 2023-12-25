@@ -6,7 +6,7 @@ public static class DishExtensions
 {
     public static string GetDishButtonText(this Dish dish)
     {
-        return $"{dish.Name} {dish.Price}р {(dish.IsGarnishIncluded == 1? "(с гарниром)" : "")}";
+        return $"{dish.Name}{(dish.IsGarnishIncluded == 1? " (с гарниром)" : "")} — {dish.Price}р ";
     }
 
     public static string GetClickIdentifier(this Dish dish, int childId = 0)
