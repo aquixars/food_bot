@@ -199,27 +199,30 @@ public class TelegramBackgroundWorker : BackgroundService
 
                         var lastPageNumber = Math.Round(Math.Ceiling(a: (double)dishes.Count / pageSize));
 
-                        //if (pageNumber == 1) // первая страница
-                        //{
-                        //    rows.Add([InlineKeyboardButton.WithCallbackData(nextPageButtonText, $"{callBack}/{pageNumber + 1}")]);
-                        //}
-                        //else if (pageNumber == lastPageNumber) // последняя страница
-                        //{
-                        //    rows.Add([InlineKeyboardButton.WithCallbackData(previousPageButtonText, $"{callBack}/{pageNumber - 1}")]);
-                        //}
-                        //else // всё что между ними
-                        //{
-                        //    rows.Add([
-                        //        InlineKeyboardButton.WithCallbackData(previousPageButtonText, $"{callBack}/{pageNumber - 1}"),
-                        //        InlineKeyboardButton.WithCallbackData(nextPageButtonText, $"{callBack}/{pageNumber + 1}"),
-                        //    ]);
-                        //}
+                        if (pageNumber == 1) // первая страница
+                        {
+                            rows.Add([InlineKeyboardButton.WithCallbackData($"Страница 1 из {lastPageNumber}", dummyCallback),
+                                      InlineKeyboardButton.WithCallbackData(nextPageButtonText, $"{callBack}/{pageNumber + 1}")]);
+                        }
+                        else if (pageNumber == lastPageNumber) // последняя страница
+                        {
+                            rows.Add([InlineKeyboardButton.WithCallbackData(previousPageButtonText, $"{callBack}/{pageNumber - 1}"),
+                                      InlineKeyboardButton.WithCallbackData($"Страница {lastPageNumber} из {lastPageNumber}", dummyCallback)]);
+                        }
+                        else // всё что между ними
+                        {
+                            rows.Add([
+                                InlineKeyboardButton.WithCallbackData(previousPageButtonText, $"{callBack}/{pageNumber - 1}"),
+                                InlineKeyboardButton.WithCallbackData($"Страница {pageNumber} из {lastPageNumber}", dummyCallback),
+                                InlineKeyboardButton.WithCallbackData(nextPageButtonText, $"{callBack}/{pageNumber + 1}"),
+                           ]);
+                        }
 
-                        rows.Add([
-                                InlineKeyboardButton.WithCallbackData(previousPageButtonText, pageNumber == 1 ? dummyCallback : $"{callBack}/{pageNumber - 1}"),
-                                InlineKeyboardButton.WithCallbackData($"[{pageNumber}/{lastPageNumber}]", dummyCallback),
-                                InlineKeyboardButton.WithCallbackData(nextPageButtonText, pageNumber == lastPageNumber ? dummyCallback : $"{callBack}/{pageNumber + 1}"),
-                            ]);
+                        // rows.Add([
+                        //         InlineKeyboardButton.WithCallbackData(previousPageButtonText, pageNumber == 1 ? dummyCallback : $"{callBack}/{pageNumber - 1}"),
+                        //         InlineKeyboardButton.WithCallbackData($"[{pageNumber}/{lastPageNumber}]", dummyCallback),
+                        //         InlineKeyboardButton.WithCallbackData(nextPageButtonText, pageNumber == lastPageNumber ? dummyCallback : $"{callBack}/{pageNumber + 1}"),
+                        //     ]);
                     }
                     else // just everything
                     {

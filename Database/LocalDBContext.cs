@@ -30,6 +30,8 @@ public partial class LocalDBContext : DbContext
 
     public virtual DbSet<OrderLine> OrderLines { get; set; }
 
+    public virtual DbSet<SettingType> SettingTypes { get; set; }
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

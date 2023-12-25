@@ -17,8 +17,8 @@ public static class GlobalVariables
     public const string settingsButtonText = "⚙️ Настройки";
     public const string historyButtonText = "🛍️ История заказов";
 
-    public const string previousPageButtonText = "⬅️ Назад";
-    public const string nextPageButtonText = "Далее ➡️";
+    public const string previousPageButtonText = "Назад"; // "⬅️ Назад"
+    public const string nextPageButtonText = "Вперед"; // "Далее ➡️"
 
     public const string backToMenuCallback = "back.to.menu";
     public const string garnishMenuCallback = "garnish.menu";
