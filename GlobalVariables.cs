@@ -14,8 +14,10 @@ public static class GlobalVariables
     public const string sendOrderButtonText = "📤 Отправить заказ";
     public const string settingsCommandText = "/settings";
     public const string historyCommandText = "/history";
+    public const string refreshButtonsCommandText = "/refresh";
     public const string settingsButtonText = "⚙️ Настройки";
     public const string historyButtonText = "🛍️ История заказов";
+    public const string refreshButtonText = "🔄 Обновить кнопки";
 
     public const string previousPageButtonText = "Назад"; // "⬅️ Назад"
     public const string nextPageButtonText = "Вперед"; // "Далее ➡️"

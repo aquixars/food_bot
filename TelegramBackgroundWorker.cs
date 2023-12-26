@@ -63,12 +63,13 @@ public class TelegramBackgroundWorker : BackgroundService
 
             var cancellationToken = new CancellationTokenSource().Token;
 
-            telegramBot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions { AllowedUpdates = { }, }, cancellationToken);
-
             await telegramBot.SetMyCommandsAsync(new List<BotCommand>() {
                 new() { Command = settingsCommandText, Description = settingsButtonText },
-                new() { Command = historyCommandText, Description = historyButtonText }
+                new() { Command = historyCommandText, Description = historyButtonText },
+                new() { Command = refreshButtonsCommandText, Description = refreshButtonText }
             }, new BotCommandScopeDefault(), "ru", cancellationToken);
+
+            telegramBot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, new ReceiverOptions { AllowedUpdates = { }, }, cancellationToken);
         }
         catch (Exception exception)
         {
@@ -390,7 +391,7 @@ public class TelegramBackgroundWorker : BackgroundService
                     db.SaveChanges();
                     var settingTypeToChange = db.SettingTypes.SingleOrDefault(o => o.Id == settingToChange.SettingId);
                     _logger.LogInformation($"Пользователь [{senderName}] изменил значение настройки {settingTypeToChange.Name} с {oldValue} на {newValue}");
-                    model.Text = "Ниже перечислены настройки твоего профиля.\n\n<i>Чтобы изменить значение, нажми на строчку с именем настройки.\n✔️ — настройка включена,\n🚫 — настройка выключена</i>";
+                    model.Text = "Ниже перечислены настройки твоего профиля.\n\n<i>Чтобы изменить значение, нажми на строчку с именем настройки.\n✅ — настройка включена,\n🚫 — настройка выключена</i>";
                     model.isEditOldMessage = true;
                     var settings = await scope.ServiceProvider.GetRequiredService<UserService>().GetUserSettings(dbUser.Id);
                     await botClient.HandleSettingsClick(model, settings);
@@ -429,7 +430,7 @@ public class TelegramBackgroundWorker : BackgroundService
                     _logger.LogInformation($"Пользователь [{senderName}] нажал на кнопку \"Мой заказ\"");
                     return;
                 case settingsCommandText:
-                    model.Text = "Ниже перечислены настройки твоего профиля.\n\n<i>Чтобы изменить значение, нажми на строчку с именем настройки.\n✔️ — настройка включена,\n🚫 — настройка выключена</i>";
+                    model.Text = "Ниже перечислены настройки твоего профиля.\n\n<i>Чтобы изменить значение, нажми на строчку с именем настройки.\n✅ — настройка включена,\n🚫 — настройка выключена</i>";
                     model.isEditOldMessage = false;
                     var settings = await scope.ServiceProvider.GetRequiredService<UserService>().GetUserSettings(dbUser.Id);
                     await botClient.HandleSettingsClick(model, settings);
@@ -477,7 +478,7 @@ public class TelegramBackgroundWorker : BackgroundService
         {
             var chatId = update.Message?.Chat.Id ?? update.CallbackQuery.Message.Chat.Id;
 
-            //await botClient.SetChatMenuButtonAsync(chatId: chatId, cancellationToken: cancellationToken);
+            await botClient.SetChatMenuButtonAsync(chatId: chatId, cancellationToken: cancellationToken);
         }
     }
 }

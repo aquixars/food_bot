@@ -172,7 +172,7 @@ public static class ITelegramBotClientExtensions
 
         foreach (var setting in settings)
         {
-            string emojiValue = setting.Value.ToUpperInvariant() == "ДА" ? "✔️" : "🚫";
+            string emojiValue = setting.Value.ToUpperInvariant() == "ДА" ? "✅" : "🚫";
             rows.Add([InlineKeyboardButton.WithCallbackData($"{setting.Name}: {emojiValue}", $"{dummyCallback}/changeValue/{setting.Id}")]);
         }
 
